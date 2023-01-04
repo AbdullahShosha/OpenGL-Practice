@@ -65,14 +65,14 @@ int main()
     glewInit();
     float Positions[12] =
     {
-        -0.2f ,-0.2f,
-        -0.2f , 0.2f,
-         0.2f , 0.2f,
-
-        -0.2f , -0.2f,
-         0.2f ,  0.2f,
-         0.2f , -0.2f
+        -0.2f , -0.2f, //0
+         0.2f , -0.2f, //1
+         0.2f ,  0.2f, //2
+        -0.2f ,  0.2f  //3
     };
+    unsigned int indices[] = 
+    { 0,1,2  ,0,2,3  };
+
     unsigned int BufferID;
     glGenBuffers(1, &BufferID);
     glBindBuffer(GL_ARRAY_BUFFER, BufferID);
@@ -81,6 +81,13 @@ int main()
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    unsigned int IndexBufferObject;
+    glGenBuffers(1, &IndexBufferObject);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferObject);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_DYNAMIC_DRAW);
+
+
 
     std::string VertexShaderString = ParseShader("res/shaders/VertexShader.shader");
     std::string FragmentFhaderString = ParseShader("res/shaders/FragmentShader.shader");
@@ -96,7 +103,7 @@ int main()
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,nullptr);
 
         //for (int i = 0; i < 12; i++)
             //Positions[i] += 0.0001f;
