@@ -5,6 +5,11 @@
 #include <string>
 #include <sstream>
 
+
+//#include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+
 static std::string ParseShader(const std::string& filepath)
 {
     std::string line;
@@ -63,45 +68,31 @@ int main()
     glewInit();
     float Positions[16] =
     {
-        -1.0f , -1.0f, //0
-         -0.6f , -1.0f, //1
-         -0.6f ,  -0.6f, //2
-        -1.0f ,  -0.6f,  //3
+        -1.0f ,  -1.0f,//0
+        -0.6f ,  -1.0f,//1
+        -0.6f ,  -0.6f,//2
+        -1.0f ,  -0.6f,//3
 
-         0.6f , 0.6f, //4
-         1.0f , 0.6f, //5
+         0.6f ,  0.6f, //4
+         1.0f ,  0.6f, //5
          1.0f ,  1.0f, //6
-        0.6f ,  1.0f  //7
+         0.6f ,  1.0f  //7
     };
-    unsigned int indices1[] = 
+    unsigned int indices1[6] =
     { 0,1,2  ,3,0,1  };
-    unsigned int indices2[] = 
+    unsigned int indices2[6] = 
     { 4,5,6  ,4,6,7  };
 
     //first square 
-    unsigned int Buffer1ID;
-    glGenBuffers(1, &Buffer1ID);
-    glBindBuffer(GL_ARRAY_BUFFER, Buffer1ID);
-    glBufferData(GL_ARRAY_BUFFER, 16 * sizeof(float), Positions, GL_STATIC_DRAW);
+    VertexBuffer VB(Positions, 16 * sizeof(float));
+
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
 
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    unsigned int IndexBufferObject1;
-    glGenBuffers(1, &IndexBufferObject1);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferObject1);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices1, GL_STATIC_READ);
-
-    unsigned int IndexBufferObject2;
-    glGenBuffers(1, &IndexBufferObject2);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferObject2);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices2, GL_STATIC_READ);
-
-
-
-
+    IndexBuffer First_Shape(indices1, 6);
+    
+    IndexBuffer Second_Shape(indices2, 6);
+    
 
     std::string VertexShaderString = ParseShader("res/shaders/VertexShader.shader");
     std::string FragmentFhaderString = ParseShader("res/shaders/FragmentShader.shader");
@@ -122,11 +113,12 @@ int main()
 
         if (location != -1)
             glUniform4f(location, red, 0.0f, 1.0f, 1.0f);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferObject1);
-        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT,nullptr);
+
+        First_Shape.bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,nullptr);
         
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferObject2);
-        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT,nullptr);
+        Second_Shape.bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,nullptr);
 
 
         if (red >= 1.0f)
