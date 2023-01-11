@@ -1,52 +1,17 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include<fstream>
-#include <string>
-#include <sstream>
 
 
 //#include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "Shader.h"
 
-static std::string ParseShader(const std::string& filepath)
+struct VertexStream
 {
-    std::string line;
-    std::stringstream shaderstream;
-    std::ifstream stream(filepath);
-    while (getline(stream, line))
-    {
-        shaderstream << line << "\n";
-    }
-    return shaderstream.str();
-}
-
-static unsigned int compileshader(unsigned int type, const std::string& source)
-{
-    unsigned int id = glCreateShader(type);
-    const char* src = source.c_str();
-    glShaderSource(id, 1, &src, nullptr);
-    glCompileShader(id);
-    return id;
-}
-
-static int CreateShader(unsigned int type,const std::string& ShaderString)
-{
-    unsigned int program = glCreateProgram();
-    unsigned int ReadyShader = compileshader(type, ShaderString);
-
-    glAttachShader(program, ReadyShader);
-
-    glLinkProgram(program);
-    glValidateProgram(program);
-
-    glDeleteShader(ReadyShader);
-
-    return program;
-}
-
-
+    float Positions[2];
+};
 
 int main()
 {
@@ -66,8 +31,8 @@ int main()
     glfwMakeContextCurrent(window);
 
     glewInit();
-    float Positions[16] =
-    {
+
+    VertexStream Verts[8] = {
         -1.0f ,  -1.0f,//0
         -0.6f ,  -1.0f,//1
         -0.6f ,  -0.6f,//2
@@ -83,27 +48,30 @@ int main()
     unsigned int indices2[6] = 
     { 4,5,6  ,4,6,7  };
 
-    //first square 
-    VertexBuffer VB(Positions, 16 * sizeof(float));
+    //Vertex Buffer 
+    VertexBuffer VB(Verts, 8 * sizeof(VertexStream));
 
+    //BufferLayout
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
 
+
+    //IndexBuffers
     IndexBuffer First_Shape(indices1, 6);
-    
     IndexBuffer Second_Shape(indices2, 6);
     
 
-    std::string VertexShaderString = ParseShader("res/shaders/VertexShader.shader");
-    std::string FragmentFhaderString = ParseShader("res/shaders/FragmentShader.shader");
-    
-    unsigned int Vshader = CreateShader(GL_VERTEX_SHADER, VertexShaderString);
-    unsigned int Fshader = CreateShader(GL_FRAGMENT_SHADER, FragmentFhaderString);
-    
-    glUseProgram(Vshader);
-    glUseProgram(Fshader);
 
-    int location = glGetUniformLocation(Fshader,"u_Color");
+    //Shaders
+    Shader VertexShader (GL_VERTEX_SHADER,"res/shaders/VertexShader.shader");
+    Shader FragmentShader (GL_FRAGMENT_SHADER,"res/shaders/FragmentShader.shader");
+    
+    VertexShader.Bind();
+    FragmentShader.Bind();
+    
+    int Uniformlocation = FragmentShader.GetUniformLocation("u_Color");
+    
+    
     float red = 0.0f,increment = 0.0001f;
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -111,8 +79,8 @@ int main()
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (location != -1)
-            glUniform4f(location, red, 0.0f, 1.0f, 1.0f);
+        if (Uniformlocation != -1)
+            FragmentShader.SetUnifor4F(Uniformlocation, red, 0.0f, 1.0f, 1.0f);
 
         First_Shape.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,nullptr);
@@ -127,7 +95,7 @@ int main()
             increment = 0.0001f;
         red += increment;
         //for (int i = 0; i < 12; i++)
-            //Positions[i] += 0.0001f;
+            //VertexStream[i] += 0.0001f;
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
